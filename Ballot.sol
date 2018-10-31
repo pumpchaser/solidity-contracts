@@ -51,6 +51,7 @@ contract BallotFactory {
 
   function withdraw() public onlyOwner returns(bool) {
     owner.transfer(address(this).balance);
+    return true;
   }
 
   function closeBallot() public onlyOwner onlyOpen payable returns(bool){
@@ -58,6 +59,7 @@ contract BallotFactory {
     require(msg.value >= 1 ether);
 
     isOpen = false;
+
     return true;
   }
 
@@ -68,6 +70,7 @@ contract BallotFactory {
     candidates.push(_vote);
 
     emit newVote(msg.sender, voterContracts[msg.sender]);
+
     return true;
   }
 
@@ -92,5 +95,4 @@ contract BallotFactory {
       return winner;
     }
   }
-
 }
