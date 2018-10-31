@@ -49,14 +49,12 @@ contract BallotFactory {
         if(currentCount > count){
             winner = candidates[i];
             count = currentCount;
-        }
-        // Bugged
-        if(currentCount == count){
+        }else if(currentCount == count){
           tied = true;
         }
     }
 
-    return tied ? 'Tied' : winner;
+    return tied ? 'tied' : winner;
   }
 
 }
