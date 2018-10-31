@@ -13,12 +13,13 @@ contract Ballot {
 }
 
 contract BallotFactory {
-  mapping(address => address) voterContracts;
-
-  string[] candidates;
-  mapping(string => uint) candidateVotes;
-
+  address owner;
+  bool isOpen;
   uint64 maxVote;
+  string public winner;
+  string[] candidates;
+  mapping(address => address) voterContracts;
+  mapping(string => uint) candidateVotes;
 
   event newVote(address owner, address ballotAddress);
 
@@ -27,20 +28,51 @@ contract BallotFactory {
     _;
   }
 
-  constructor (uint64 _maxVote) public {
-      maxVote = _maxVote;
+  modifier onlyOpen {
+    require(isOpen);
+    _;
   }
 
-  function createVote(string _vote) public onlyOnce payable{
+  modifier onlyClosed {
+    require(!isOpen);
+    _;
+  }
+
+  modifier onlyOwner {
+    require(msg.sender == owner);
+    _;
+  }
+
+  constructor (uint64 _maxVote) public {
+      owner = msg.sender;
+      maxVote = _maxVote;
+      isOpen = true;
+  }
+
+  function withdraw() public onlyOwner returns(bool) {
+    owner.transfer(address(this).balance);
+  }
+
+  function closeBallot() public onlyOwner onlyOpen payable returns(bool){
+    // Prevent accidental closingn of ballot
+    require(msg.value >= 1 ether);
+
+    isOpen = false;
+    return true;
+  }
+
+  function createVote(string _vote) public onlyOnce onlyOpen returns(bool) {
     Ballot ballot = new Ballot(_vote);
     voterContracts[msg.sender] = ballot.contractAddress();
     candidateVotes[_vote] += 1;
     candidates.push(_vote);
+
+    emit newVote(msg.sender, voterContracts[msg.sender]);
+    return true;
   }
 
-  function getWinner() public view returns (string) {
+  function getWinner() onlyOwner onlyClosed public returns (string) {
     uint count;
-    string memory winner;
     bool tied;
 
     for(uint i=0; i < candidates.length; i++){
@@ -54,7 +86,11 @@ contract BallotFactory {
         }
     }
 
-    return tied ? 'tied' : winner;
+    if(tied){
+      return 'tied';
+    }else{
+      return winner;
+    }
   }
 
 }
