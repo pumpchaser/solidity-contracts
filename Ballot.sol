@@ -13,59 +13,50 @@ contract Ballot {
 }
 
 contract BallotFactory {
-  address[] public voterAddresses;
   mapping(address => address) voterContracts;
-  mapping(string => uint) voteCount;
-  string[] public possibleChoices;
-  string public winner;
+
+  string[] candidates;
+  mapping(string => uint) candidateVotes;
+
+  uint64 maxVote;
+
+  event newVote(address owner, address ballotAddress);
 
   modifier onlyOnce {
     require(voterContracts[msg.sender] == 0);
     _;
   }
 
-  event newVote(address owner, address ballotAddress);
+  constructor (uint64 _maxVote) public {
+      maxVote = _maxVote;
+  }
 
   function createVote(string _vote) public onlyOnce payable{
-    voterContracts[msg.sender] = new Ballot(_vote).contractAddress();
-    voterAddresses.push(msg.sender);
+    Ballot ballot = new Ballot(_vote);
+    voterContracts[msg.sender] = ballot.contractAddress();
+    candidateVotes[_vote] += 1;
+    candidates.push(_vote);
   }
 
-  function tallyVote() private{
-    for(uint i = 0; i< voterAddresses.length; i++){
-      address contractAddress = voterContracts[voterAddresses[i]];
-      string memory vote = Ballot(contractAddress).vote();
-      voteCount[vote] += 1;
-      possibleChoices.push(vote);
-    }
-  }
+  function getWinner() public view returns (string) {
+    uint count;
+    string memory winner;
+    bool tied;
 
-  function determineWinner() private returns (string) {
-    uint count = 0;
+    for(uint i=0; i < candidates.length; i++){
+        uint currentCount = candidateVotes[candidates[i]];
 
-    for(uint j = 0; j < possibleChoices.length; j++){
-      if(voteCount[possibleChoices[j]] > count){
-        count = voteCount[possibleChoices[j]];
-        winner = possibleChoices[j];
-      }
-    }
-
-    return winner;
-  }
-
-  function resetData() private {
-    for(uint i = 0; i< voterAddresses.length; i++){
-      address contractAddress = voterContracts[voterAddresses[i]];
-      string memory vote = Ballot(contractAddress).vote();
-      voteCount[vote] = 0;
+        if(currentCount > count){
+            winner = candidates[i];
+            count = currentCount;
+        }
+        // Bugged
+        if(currentCount == count){
+          tied = true;
+        }
     }
 
-    delete possibleChoices;
+    return tied ? 'Tied' : winner;
   }
 
-  function getWinner() public returns (string){
-    resetData();
-    tallyVote();
-    return determineWinner();
-  }
 }
