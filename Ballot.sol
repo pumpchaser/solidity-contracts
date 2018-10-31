@@ -84,6 +84,7 @@ contract BallotFactory {
         if(currentCount > count){
             winner = candidates[i];
             count = currentCount;
+            tied = false;
         }else if(currentCount == count){
             tied = true;
         }
