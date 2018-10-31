@@ -18,13 +18,18 @@ contract BallotFactory {
     uint64 maxVote;
     string public winner;
     string[] candidates;
+
+    // KYC to prevent multiple votes
+    // 0 = Unregistered, 1 = Registered, 2 = Voted
+    mapping(address => uint) voterStatus;
+
     mapping(address => address) voterContracts;
     mapping(string => uint) candidateVotes;
 
     event newVote(address owner, address ballotAddress);
 
-    modifier onlyOnce {
-        require(voterContracts[msg.sender] == 0);
+    modifier canVote {
+        require(voterStatus[msg.sender] == 1);
         _;
     }
 
@@ -54,6 +59,11 @@ contract BallotFactory {
         return true;
     }
 
+    function approveAddress(address _address) public onlyOwner returns(bool) {
+        voterStatus[_address] = 1;
+        return true;
+    }
+
     function closeBallot() public onlyOwner onlyOpen payable returns(bool){
         // Prevent accidental closingn of ballot
         require(msg.value >= 1 ether);
@@ -63,9 +73,10 @@ contract BallotFactory {
         return true;
     }
 
-    function createVote(string _vote) public onlyOnce onlyOpen returns(bool) {
+    function createVote(string _vote) public canVote onlyOpen returns(bool) {
         Ballot ballot = new Ballot(_vote);
         voterContracts[msg.sender] = ballot.contractAddress();
+        voterStatus[msg.sender] = 2;
         candidateVotes[_vote] += 1;
         candidates.push(_vote);
 
