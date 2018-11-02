@@ -65,7 +65,7 @@ contract BallotFactory {
     }
 
     function closeBallot() public onlyOwner onlyOpen payable returns(bool){
-        // Prevent accidental closingn of ballot
+        // Prevent accidental closing of ballot
         require(msg.value >= 1 ether);
 
         isOpen = false;
@@ -88,12 +88,13 @@ contract BallotFactory {
   function getWinner() onlyOwner onlyClosed public returns (string) {
     uint count;
     bool tied;
+    string memory currentWinner;
 
     for(uint i=0; i < candidates.length; i++){
         uint currentCount = candidateVotes[candidates[i]];
 
         if(currentCount > count){
-            winner = candidates[i];
+            currentWinner = candidates[i];
             count = currentCount;
             tied = false;
         }else if(currentCount == count){
@@ -101,10 +102,8 @@ contract BallotFactory {
         }
     }
 
-    if(tied){
-        return 'tied';
-    }else{
-        return winner;
-    }
+    winner = currentWinner;
+
+    return tied ? 'tied' : winner
   }
 }
