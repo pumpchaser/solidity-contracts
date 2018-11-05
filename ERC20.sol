@@ -1,10 +1,12 @@
 pragma solidity ^0.4.24;
 
 import "./lib/ERC20Transfer.sol";
+import "./lib/Safemath.sol";
 
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
 contract ERC20 {
   using ERC20Transfer for address;
+  using Safemath for uint;
 
   string public name;
   string public symbol;
