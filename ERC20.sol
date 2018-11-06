@@ -46,10 +46,10 @@ contract ERC20 {
     require(msg.value > 0);
 
     // 1eth = 1000coin
-    uint256 adjustedAmount = ((msg.value / 1 ether).multiply(1000)).multiply(10**uint(decimals));
+    uint256 tokenAmount = ((msg.value / 1 ether).multiply(1000)).multiply(10**uint(decimals));
 
-    ERC20Transfer.transferTokens(userBalance, owner, msg.sender, adjustedAmount);
-    emit Transfer(owner, msg.sender, adjustedAmount);
+    ERC20Transfer.transferTokens(userBalance, owner, msg.sender, tokenAmount);
+    emit Transfer(owner, msg.sender, tokenAmount);
     return true;
   }
 
