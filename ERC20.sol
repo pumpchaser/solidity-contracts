@@ -5,14 +5,9 @@ import { Safemath } from "./Safemath.sol";
 
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
 contract ERC20 {
-  struct UserBalance{
-    mapping(address => uint256) balances;
-  }
-
-  using ERC20Transfer for UserBalance;
   using Safemath for uint;
 
-  UserBalance userBalance;
+  ERC20Transfer.UserBalance userBalance;
 
   string public name;
   string public symbol;
@@ -51,11 +46,10 @@ contract ERC20 {
     require(msg.value > 0);
 
     // 1eth = 1000coin
-    uint256 tokenAmount = ((msg.value / 1 ether).multiply(1000)).multiply(10**uint(decimals));
+    uint256 adjustedAmount = ((msg.value / 1 ether).multiply(1000)).multiply(10**uint(decimals));
 
-    // userBalance.transferTokens(address(this), msg.sender, tokenAmount);
-    ERC20Transfer.transferTokens(userBalance, address(this), msg.sender, tokenAmount);
-    emit Transfer(address(this), msg.sender, tokenAmount);
+    ERC20Transfer.transferTokens(userBalance, owner, msg.sender, adjustedAmount);
+    emit Transfer(owner, msg.sender, adjustedAmount);
     return true;
   }
 
