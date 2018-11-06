@@ -12,8 +12,11 @@ library ERC20Transfer {
   function transferTokens(UserBalance storage self, address _from, address _to, uint _amount) public returns(bool) {
     require(self.balance[_from] >= _amount);
 
-    self.balance[_from] = self.balance[_from].subtract(_amount);
-    self.balance[_to]   = self.balance[_to].add(_amount);
+    self.balance[_from] -= _amount;
+    self.balance[_to] += _amount;
+    // self.balance[_from] = self.balance[_from].subtract(_amount);
+    // self.balance[_to]   = self.balance[_to].add(_amount);
+
     return true;
   }
 }
