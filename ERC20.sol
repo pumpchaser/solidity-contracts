@@ -24,7 +24,7 @@ contract ERC20 {
     symbol      = _symbol;
     decimals    = _decimals;
     totalSupply = _totalSupply.multiply(10**uint(decimals));
-    userBalance.balances[owner] = totalSupply;
+    userBalance.balance[owner] = totalSupply;
   }
 
   modifier onlyOwner {
@@ -63,6 +63,6 @@ contract ERC20 {
   }
 
   function balanceOf(address _owner) public view returns(uint256) {
-    return userBalance.balances[_owner];
+    return userBalance.balance[_owner];
   }
 }
