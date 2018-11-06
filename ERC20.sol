@@ -1,19 +1,23 @@
 pragma solidity ^0.4.24;
 
-import "./lib/ERC20Transfer.sol";
-import "./lib/Safemath.sol";
+import { ERC20Transfer } from "./ERC20Transfer.sol";
+import { Safemath } from "./Safemath.sol";
 
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
 contract ERC20 {
-  using ERC20Transfer for address;
+  struct UserBalance{
+    mapping(address => uint256) balances;
+  }
+
+  using ERC20Transfer for UserBalance;
   using Safemath for uint;
+
+  UserBalance userBalance;
 
   string public name;
   string public symbol;
   uint8 public decimals;
   uint256 public totalSupply;
-
-  mapping(address => uint256) balances;
 
   address public owner;
 
@@ -25,7 +29,7 @@ contract ERC20 {
     symbol      = _symbol;
     decimals    = _decimals;
     totalSupply = _totalSupply.multiply(10**uint(decimals));
-    balances[owner] = totalSupply;
+    userBalance.balances[owner] = totalSupply;
   }
 
   modifier onlyOwner {
@@ -49,26 +53,22 @@ contract ERC20 {
     // 1eth = 1000coin
     uint256 tokenAmount = ((msg.value / 1 ether).multiply(1000)).multiply(10**uint(decimals));
 
-    // Ensure contract owner has enough token to sell
-    require(balances[owner] >= tokenAmount);
-
-    owner.transferTokens(msg.sender, adjustedAmount);
-
+    // userBalance.transferTokens(address(this), msg.sender, tokenAmount);
+    ERC20Transfer.transferTokens(userBalance, address(this), msg.sender, tokenAmount);
     emit Transfer(address(this), msg.sender, tokenAmount);
     return true;
   }
 
-  function transfer(address _to, uint256 _amounts) public returns(bool) {
+  function transfer(address _to, uint256 _amount) public returns(bool) {
     uint adjustedAmount = _amount.multiply(10**uint(decimals));
-    require(balances[msg.sender] > adjustedAmount);
 
-    msg.sender.transferTokens(_to, adjustedAmount);
+    ERC20Transfer.transferTokens(userBalance, msg.sender, _to, adjustedAmount);
 
     emit Transfer(msg.sender, _to, adjustedAmount);
     return true;
   }
 
   function balanceOf(address _owner) public view returns(uint256) {
-    return balances[_owner];
+    return userBalance.balances[_owner];
   }
 }
